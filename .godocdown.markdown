@@ -1,0 +1,14 @@
+###Etcd
+
+Is the vulcand implementation for herald.
+
+[![GoDoc](https://godoc.org/github.com/duckbunny/{{ .Name }}?status.svg)](https://godoc.org/github.com/duckbunny/{{ .Name }})
+
+
+{{ .EmitHeader }}
+
+{{ .EmitSynopsis }}
+
+
+{{ .EmitUsage }}
+
