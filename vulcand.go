@@ -17,12 +17,15 @@ import (
 	"github.com/coreos/etcd/Godeps/_workspace/src/golang.org/x/net/context"
 	"github.com/coreos/etcd/client"
 	"github.com/duckbunny/etcd"
+	"github.com/duckbunny/herald"
 	"github.com/duckbunny/service"
 )
 
 var (
 	KVpath string = "/vulcand/backends"
 	TTL    int    = 15
+	// Title for specifying herald in flags
+	Title string = "vulcand"
 )
 
 type Backend struct {
@@ -112,4 +115,11 @@ func BasePath(s *service.Service) string {
 }
 func Url(s *service.Service) string {
 	return fmt.Sprintf("%v:%v", environment.Host(), s.Port)
+}
+
+// Register this herald with consul
+func Register() {
+	c := New()
+	herald.AddPool(Title, c)
+	herald.AddDeclaration(Title, c)
 }
