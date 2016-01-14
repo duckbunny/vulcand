@@ -18,6 +18,8 @@ Is the vulcand implementation for herald.
 var (
 	KVpath string = "/vulcand/backends"
 	TTL    int    = 15
+	// Title for specifying herald in flags
+	Title string = "vulcand"
 )
 ```
 
@@ -32,6 +34,13 @@ func BackendPath(s *service.Service) string
 ```go
 func BasePath(s *service.Service) string
 ```
+
+#### func  Register
+
+```go
+func Register()
+```
+Register this herald with consul
 
 #### func  ServerPath
 
