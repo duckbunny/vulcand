@@ -22,18 +22,18 @@ import (
 )
 
 var (
-	KVpath string = "/vulcand/backends"
+	KVPath string = "/vulcand/backends"
 	TTL    int    = 15
 	// Title for specifying herald in flags
 	Title string = "vulcand"
 )
 
 type Backend struct {
-	Type `json:"Type"`
+	Type string `json:"Type"`
 }
 
 type Server struct {
-	URL `json:"URL"`
+	URL string `json:"URL"`
 }
 
 func init() {
@@ -52,69 +52,74 @@ type Vulcand struct {
 	*etcd.Etcd
 }
 
-func New() *Etcd {
-	return new(Vulcand{etcd.New()})
+func New() *Vulcand {
+	e := etcd.New()
+	v := &Vulcand{e}
+	return v
 }
 
 func (v *Vulcand) Start(s *service.Service) error {
-	if err != nil {
-		return err
-	}
 	key := BackendPath(s)
 	b := Backend{s.Protocol}
 	js, err := json.Marshal(b)
 	if err != nil {
 		return err
 	}
-	_, err = v.Kapi.Set(context.Background(), key, string(js), nil)
+	_, err = v.KeysAPI.Set(context.Background(), key, string(js), nil)
 	if err != nil {
-		return ProcessEtcdErrors(err)
+		return etcd.ProcessEtcdErrors(err)
 	}
-	err = setServer(s)
+	err = v.setServer(s)
 	if err != nil {
 		return err
 	}
-	go heartBeat(s)
+	go v.heartBeat(s)
+	return nil
 }
 
-func heartBeat(s service.Service) {
+func (v *Vulcand) heartBeat(s *service.Service) {
 	for _ = range time.Tick(time.Duration(TTL-1) * time.Second) {
-		setServer(s)
+		v.setServer(s)
 	}
 }
 
-func setServer(s service.Service) error {
+func (v *Vulcand) setServer(s *service.Service) error {
 	key := ServerPath(s)
-	s := Server{Url(s)}
-	so := client.SetOptions{TTL: TTL}
-	_, err = v.Kapi.Set(context.Background(), key, string(js), so)
+	serv := Server{Url(s)}
+	so := client.SetOptions{TTL: time.Duration(TTL) * time.Second}
+	js, err := json.Marshal(serv)
 	if err != nil {
-		return ProcessEtcdErrors(err)
+		return err
 	}
-
+	_, err = v.KeysAPI.Set(context.Background(), key, string(js), &so)
+	if err != nil {
+		return etcd.ProcessEtcdErrors(err)
+	}
+	return nil
 }
 
 func (v *Vulcand) Stop(s *service.Service) error {
 	key := ServerPath(s)
-	p, err = v.Kapi.Delete(context.Background(), key, nil)
+	_, err := v.KeysAPI.Delete(context.Background(), key, nil)
 	if err != nil {
-		return ProcessEtcdErrors(err)
+		return etcd.ProcessEtcdErrors(err)
 	}
+	return nil
 }
 
 func BackendPath(s *service.Service) string {
-	return fmt.Sprintf("%v/backend", basePath(s))
+	return fmt.Sprintf("%v/backend", BasePath(s))
 }
 
 func ServerPath(s *service.Service) string {
-	return fmt.Sprintf("%v/servers/%v.%v", basePath(s), environment.Host(), s.Port)
+	return fmt.Sprintf("%v/servers/%v.%v", BasePath(s), s.Host, s.Port)
 }
 
 func BasePath(s *service.Service) string {
 	return fmt.Sprintf("%v/%v.%v.%v", KVPath, s.Domain, s.Title, s.Version)
 }
 func Url(s *service.Service) string {
-	return fmt.Sprintf("%v:%v", environment.Host(), s.Port)
+	return fmt.Sprintf("%v:%v", s.Host, s.Port)
 }
 
 // Register this herald with consul

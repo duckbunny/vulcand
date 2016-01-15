@@ -16,7 +16,7 @@ Is the vulcand implementation for herald.
 
 ```go
 var (
-	KVpath string = "/vulcand/backends"
+	KVPath string = "/vulcand/backends"
 	TTL    int    = 15
 	// Title for specifying herald in flags
 	Title string = "vulcand"
@@ -58,7 +58,7 @@ func Url(s *service.Service) string
 
 ```go
 type Backend struct {
-	Type `json:"Type"`
+	Type string `json:"Type"`
 }
 ```
 
@@ -67,7 +67,7 @@ type Backend struct {
 
 ```go
 type Server struct {
-	URL `json:"URL"`
+	URL string `json:"URL"`
 }
 ```
 
@@ -80,6 +80,12 @@ type Vulcand struct {
 }
 ```
 
+
+#### func  New
+
+```go
+func New() *Vulcand
+```
 
 #### func (*Vulcand) Start
 
