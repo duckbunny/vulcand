@@ -50,11 +50,13 @@ func init() {
 
 type Vulcand struct {
 	*etcd.Etcd
+	heartBeatKill chan bool
 }
 
 func New() *Vulcand {
 	e := etcd.New()
-	v := &Vulcand{e}
+	c := make(chan bool)
+	v := &Vulcand{e, c}
 	return v
 }
 
@@ -79,6 +81,12 @@ func (v *Vulcand) Start(s *service.Service) error {
 
 func (v *Vulcand) heartBeat(s *service.Service) {
 	for _ = range time.Tick(time.Duration(TTL-1) * time.Second) {
+		select {
+		case <-v.heartBeatKill:
+			v.Stop(s)
+			return
+		default:
+		}
 		v.setServer(s)
 	}
 }
